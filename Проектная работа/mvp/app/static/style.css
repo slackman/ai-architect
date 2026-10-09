@@ -1,0 +1,258 @@
+/* Общие элементы страницы */
+:root {
+  font-family: system-ui, sans-serif;
+  color: #163047;
+  background: #f4f7fa;
+  font-size: 15px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+header {
+  padding: 20px 32px;
+  background: #122b40;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+header b {
+  font-size: 25px;
+}
+header span {
+  margin-left: 25px;
+  color: #b7d0e2;
+}
+#identity {
+  margin-left: auto;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  border-radius: 8px;
+  border: 1px solid #c4d4df;
+  padding: 10px;
+}
+button {
+  background: #126b68;
+  color: white;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+input,
+textarea,
+select {
+  background: white;
+  color: #163047;
+}
+h1 {
+  font-size: 27px;
+}
+h2 {
+  font-size: 19px;
+}
+h3 {
+  font-size: 15px;
+  margin: 24px 0 10px;
+}
+/* Вход и основная сетка */
+#login {
+  max-width: 750px;
+  margin: 90px auto;
+  padding: 30px;
+}
+#login-form {
+  display: flex;
+  gap: 12px;
+}
+#token {
+  flex: 1;
+}
+#notice {
+  padding: 0 32px;
+  color: #a12d22;
+  white-space: pre-wrap;
+}
+main {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  margin: 24px auto;
+  max-width: 1500px;
+  padding: 0 24px;
+}
+aside,
+#chat {
+  background: white;
+  border: 1px solid #dfe8ef;
+  border-radius: 14px;
+  padding: 22px;
+}
+/* Загрузка и список документов */
+label {
+  display: block;
+  margin-bottom: 12px;
+}
+#drop {
+  border: 2px dashed #a5bccb;
+  padding: 15px;
+  font-size: 14px;
+}
+#file,
+#package-name {
+  width: 100%;
+  font-size: 12px;
+  margin-top: 10px;
+}
+#group {
+  width: 100%;
+  margin-top: 6px;
+}
+#refresh {
+  margin: 16px 0;
+  background: #e7eff4;
+  color: #163047;
+}
+.upload-package {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #e0e9ef;
+  border-radius: 9px;
+  background: #fbfdfe;
+}
+.upload-package > summary {
+  cursor: pointer;
+  display: grid;
+  gap: 5px;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.package-count {
+  color: #617889;
+  font-size: 12px;
+}
+.package-documents {
+  padding-left: 8px;
+}
+.document {
+  border-top: 1px solid #e0e9ef;
+  padding: 14px 0;
+  overflow-wrap: anywhere;
+}
+.document button {
+  display: block;
+  margin-top: 8px;
+}
+.status,
+.muted {
+  color: #617889;
+  font-size: 13px;
+}
+#more-packages,
+#more-legacy {
+  background: #e7eff4;
+  color: #163047;
+  width: 100%;
+  margin: 8px 0;
+}
+#legacy-package {
+  font-size: 14px;
+  border: 1px solid #e0e9ef;
+  border-radius: 9px;
+  padding: 10px;
+  background: #fbfdfe;
+}
+#legacy-package > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+/* Вопросы, ответы и источники */
+#messages {
+  min-height: 200px;
+  max-height: 55vh;
+  overflow: auto;
+}
+.message {
+  margin: 18px 0;
+  padding: 18px;
+  background: #f3f7fa;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.question {
+  background: #e4f4f1;
+}
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.sources button {
+  font-size: 12px;
+  background: #d9e9ed;
+  color: #183d50;
+}
+textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+}
+#question-form .question-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+details {
+  margin-top: 15px;
+  font-size: 12px;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* Просмотр оригинала документа */
+dialog {
+  width: min(1000px, 95vw);
+  max-height: 95vh;
+  border: 0;
+  border-radius: 12px;
+  padding: 24px;
+}
+dialog::backdrop {
+  background: #122b40aa;
+}
+iframe {
+  width: 100%;
+  height: 60vh;
+  border: 1px solid #ccdbe5;
+  margin-top: 15px;
+}
+[hidden] {
+  display: none !important;
+}
+/* Узкие экраны */
+@media (max-width: 760px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+  header span {
+    display: none;
+  }
+  #login {
+    margin: 30px auto;
+  }
+  #login-form {
+    flex-direction: column;
+  }
+}

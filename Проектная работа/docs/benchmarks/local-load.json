@@ -1,0 +1,39 @@
+{
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "machine": "arm64",
+  "client": "На том же компьютере, где запущен Docker Desktop",
+  "base_url": "http://127.0.0.1:8080",
+  "workload": "Авторизованное чтение. Во время замера загрузка документов и OCR не выполнялись",
+  "reads": {
+    "documents": {
+      "requests": 3423,
+      "status_counts": {
+        "200": 3423
+      },
+      "elapsed_seconds": 15.01,
+      "rps": 228.06,
+      "latency_ms": {
+        "p50": 16.58,
+        "p95": 24.97,
+        "max": 101.43
+      },
+      "concurrency": 4,
+      "target_duration_seconds": 15.0
+    },
+    "packages": {
+      "requests": 3331,
+      "status_counts": {
+        "200": 3331
+      },
+      "elapsed_seconds": 15.004,
+      "rps": 222.01,
+      "latency_ms": {
+        "p50": 16.79,
+        "p95": 26.72,
+        "max": 121.33
+      },
+      "concurrency": 4,
+      "target_duration_seconds": 15.0
+    }
+  }
+}

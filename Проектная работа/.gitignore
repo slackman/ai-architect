@@ -1,0 +1,40 @@
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local runtime data and logs
+data/
+pgdata/
+*.log
+
+# Large model weights belong in model storage, not regular Git history
+doc_preprocessing_service/template/models/DocOriModel/doc_ori_convnext.pth
+
+# Node dependencies
+node_modules/
+
+# Editors and operating system files
+.DS_Store
+.idea/
+.vscode/
+
+# Workspace-local artifacts
+.chart-data-*/
+.codex-finalizer/
+:memory:.ses

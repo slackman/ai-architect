@@ -1,0 +1,5 @@
+# Explicit demo access over HTTP by server IP. Compose v2.24.4+ is required.
+services:
+  api:
+    ports: !override
+      - "8080:8080"

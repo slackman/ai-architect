@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AccMind · Анализ документов</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css?v=4" />
+    <script defer src="/app.js?v=6"></script>
+  </head>
+  <body>
+    <header>
+      <div><b>AccMind</b></div>
+      <div id="identity"></div>
+      <button id="logout" hidden>Выйти</button>
+    </header>
+
+    <section id="login">
+      <h1>Анализ бухгалтерских документов</h1>
+      <p>Введите токен доступа к приложению.</p>
+      <form id="login-form">
+        <input
+          id="token"
+          type="password"
+          autocomplete="off"
+          required
+          placeholder="Токен доступа"
+        />
+        <button>Войти</button>
+      </form>
+    </section>
+
+    <p id="notice" role="status"></p>
+
+    <main id="workspace" hidden>
+      <aside>
+        <h2>Документы</h2>
+        <p class="muted">Загрузите документы и отслеживайте их обработку.</p>
+
+        <form id="upload-form">
+          <label id="drop">
+            Выберите файлы или перетащите их сюда
+            <input
+              id="file"
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg"
+              multiple
+              required
+            />
+          </label>
+          <p class="muted">
+            PDF, PNG, JPEG · до 10 файлов, 10 МБ на файл и 50 МБ на пакет.
+          </p>
+
+          <label>
+            Название пакета
+            <input
+              id="package-name"
+              maxlength="120"
+              placeholder="Например, документы за сентябрь"
+            />
+          </label>
+          <label>
+            Кому доступны документы
+            <select id="group">
+              <option value="shared">Всем пользователям</option>
+              <option value="finance">Только бухгалтерии</option>
+            </select>
+          </label>
+          <button id="upload-button">Загрузить документы</button>
+        </form>
+
+        <button id="refresh">Обновить список</button>
+        <h3>Пакеты документов</h3>
+        <div id="packages"></div>
+        <button id="more-packages" hidden>Показать ещё пакеты</button>
+        <details id="legacy-package">
+          <summary>Ранее загруженные документы</summary>
+          <div id="legacy-documents"></div>
+          <button id="more-legacy">Показать ещё</button>
+        </details>
+      </aside>
+
+      <section id="chat">
+        <h1>Вопросы по документам</h1>
+        <div id="messages" aria-live="polite"></div>
+        <form id="question-form">
+          <textarea
+            id="question"
+            required
+            maxlength="2000"
+            placeholder="Какие акты относятся к договору № 42?"
+          ></textarea>
+          <div class="question-actions">
+            <button id="ask">Отправить</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <dialog id="source">
+      <button id="close-source">Закрыть</button>
+      <h2 id="source-title"></h2>
+      <pre id="source-text"></pre>
+      <button id="open-file">Показать оригинал</button>
+      <iframe id="preview" title="Исходный документ" hidden></iframe>
+    </dialog>
+  </body>
+</html>

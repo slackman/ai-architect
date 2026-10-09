@@ -1,0 +1,165 @@
+name: accmind-mvp
+services:
+  api:
+    build: .
+    environment:
+      DATA_DIR: /data
+      EMBEDDING_CACHE_DIR: /models/fastembed
+      OBJECT_STORE_BACKEND: minio
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: accmind-documents
+      S3_SECURE: "false"
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-accmind_mvp_384_v1}
+      NEO4J_URI: bolt://neo4j:7687
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-https://openrouter.ai/api/v1}
+      TEXT_MODEL: ${TEXT_MODEL:-qwen/qwen3.7-flash}
+      VISION_MODEL: ${VISION_MODEL:-qwen/qwen3.7-flash}
+      MODEL_REASONING_EFFORT: ${MODEL_REASONING_EFFORT:-none}
+      OTEL_TRACES_ENDPOINT: ${OTEL_TRACES_ENDPOINT:-}
+      EMBEDDING_BACKEND: ${EMBEDDING_BACKEND:-local}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-384}
+      MAX_FILE_BYTES: ${MAX_FILE_BYTES:-10485760}
+      MAX_BATCH_FILES: ${MAX_BATCH_FILES:-10}
+      MAX_BATCH_BYTES: ${MAX_BATCH_BYTES:-52428800}
+      MAX_PAGES: ${MAX_PAGES:-12}
+      REQUESTS_PER_MINUTE: ${REQUESTS_PER_MINUTE:-10}
+    secrets:
+      - source: accountant_token
+        target: /app/secrets/accountant_token
+      - source: reader_token
+        target: /app/secrets/reader_token
+      - source: postgres_password
+        target: /app/secrets/postgres_password
+      - source: database_url
+        target: /app/secrets/database_url
+      - source: s3_access_key
+        target: /app/secrets/s3_access_key
+      - source: s3_secret_key
+        target: /app/secrets/s3_secret_key
+      - source: neo4j_password
+        target: /app/secrets/neo4j_password
+      - source: model_api_key
+        target: /app/secrets/model_api_key
+      - source: embedding_api_key
+        target: /app/secrets/embedding_api_key
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - embedding_cache:/models/fastembed
+    depends_on:
+      embedding-init:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_started
+      neo4j:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/v1/health/live', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  embedding-init:
+    image: alpine:3.22
+    user: root
+    command: ["sh", "-c", "chown -R 10001:10001 /models"]
+    volumes:
+      - embedding_cache:/models
+    restart: "no"
+  qdrant:
+    image: qdrant/qdrant:v1.17.0
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+  postgres:
+    image: postgres:16.10-alpine
+    environment:
+      POSTGRES_DB: accmind
+      POSTGRES_USER: accmind
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accmind -d accmind"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  minio:
+    image: accmind-minio:2025-04-22
+    build: ./deploy/minio
+    pull_policy: never
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/s3_access_key
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/s3_secret_key
+    secrets:
+      - s3_access_key
+      - s3_secret_key
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  neo4j:
+    image: neo4j:5.26-community
+    environment:
+      NEO4J_AUTH_FILE: /run/secrets/neo4j_auth
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 256m
+    volumes:
+      - neo4j_data:/data
+    secrets:
+      - neo4j_auth
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p \"$$(cut -d/ -f2- /run/secrets/neo4j_auth)\" 'RETURN 1'"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    restart: unless-stopped
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.21.0
+    profiles: [observability]
+    ports:
+      - "127.0.0.1:16686:16686"
+    restart: unless-stopped
+secrets:
+  accountant_token:
+    file: ./secrets/accountant_token
+  reader_token:
+    file: ./secrets/reader_token
+  postgres_password:
+    file: ./secrets/postgres_password
+  database_url:
+    file: ./secrets/database_url
+  s3_access_key:
+    file: ./secrets/s3_access_key
+  s3_secret_key:
+    file: ./secrets/s3_secret_key
+  neo4j_password:
+    file: ./secrets/neo4j_password
+  neo4j_auth:
+    file: ./secrets/neo4j_auth
+  model_api_key:
+    file: ./secrets/model_api_key
+  embedding_api_key:
+    file: ./secrets/embedding_api_key
+volumes:
+  qdrant_data:
+  neo4j_data:
+  postgres_data:
+  minio_data:
+  embedding_cache:

@@ -1,0 +1,36 @@
+{
+  "workload": "Один запрос к GraphRAG в Compose с подключённым внешним модельным API",
+  "question": "Какой номер и дата договора указаны в файле contract.pdf?",
+  "http_status": 200,
+  "elapsed_ms": 2476.7,
+  "answer_status": "answered",
+  "answer_date_redacted": true,
+  "answer": "По доступным загруженным документам, в файле contract.pdf указан договор № 42 (дата скрыта).",
+  "sources": [
+    {
+      "filename": "contract.pdf",
+      "page": 1
+    }
+  ],
+  "stage_durations_ms": {
+    "guard": 0.2,
+    "retrieve": 14.1,
+    "expand": 0.1,
+    "validate": 5.4,
+    "calculate": 0.5,
+    "generate": 2373.6,
+    "output": 0.9
+  },
+  "trace_id": "da11ce9ddca165a893545dc855ed819e",
+  "jaeger_span_names": [
+    "guard",
+    "retrieve",
+    "expand",
+    "validate",
+    "calculate",
+    "generate",
+    "output",
+    "query"
+  ],
+  "jaeger_trace_verified": true
+}
