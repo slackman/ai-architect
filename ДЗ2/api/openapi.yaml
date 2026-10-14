@@ -1,0 +1,363 @@
+openapi: 3.1.0
+info:
+  title: AccMind MVP — API вопросов по документам
+  version: 0.1.0
+  description: API вопросов по бухгалтерским документам. Поиск доступных источников, расчёты и генерация ответа с цитатами.
+servers:
+- url: http://localhost:8080
+  description: Локальный MVP; для сервера заменить URL
+paths:
+  /api/v1/queries:
+    post:
+      summary: Получить ответ / рекомендацию по доступным документам
+      description: Principal определяется по Bearer-токену на сервере. tenant и ACL нельзя задавать в запросе.
+        graph расширяет контекст связями, vector использует поиск без графового расширения. Отказы по содержанию
+        возвращаются с HTTP 200 и status; технические отказы — HTTP 401/422/429/503. Результат не устанавливает
+        задолженность и не выполняет бухгалтерских действий.
+      operationId: query_api_v1_queries_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryInput'
+            examples:
+              graph:
+                value:
+                  question: Какие документы об оплате найдены и что следует сверить?
+                  mode: graph
+              vector:
+                value:
+                  question: Найди документы об оплате
+                  mode: vector
+        required: true
+      responses:
+        '200':
+          description: Обработанный запрос; результат определяется status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+              examples:
+                answered:
+                  summary: Иллюстративный ответ; не результат запуска
+                  value:
+                    status: answered
+                    answer: По доступным загруженным документам найден акт № 1. Сверьте его с платежными документами;
+                      наличие задолженности по этому набору не установлено.
+                    citations:
+                    - id: 00000000-0000-4000-8000-000000000001
+                      document_id: 00000000-0000-4000-8000-000000000002
+                      filename: 02-akt-1.png
+                      page: 1
+                      text: Акт № 1 к договору № 42.
+                    paths: []
+                    calculations: {}
+                    stages:
+                    - name: guard
+                      ms: 1.0
+                    - name: retrieve
+                      ms: 1.0
+                    - name: expand
+                      ms: 1.0
+                    - name: validate
+                      ms: 1.0
+                    - name: calculate
+                      ms: 1.0
+                    - name: generate
+                      ms: 1.0
+                    - name: output
+                      ms: 1.0
+                    trace_id: 0123456789abcdef0123456789abcdef
+                blocked:
+                  value:
+                    status: blocked
+                    answer: Запрос заблокирован политикой безопасности.
+                    citations: []
+                    paths: []
+                    stages:
+                    - name: guard
+                      ms: 1.0
+                    trace_id: 0123456789abcdef0123456789abcdef
+                    calculations: {}
+                insufficient_evidence:
+                  value:
+                    status: insufficient_evidence
+                    answer: Недостаточно доступных источников для ответа.
+                    citations: []
+                    paths: []
+                    stages:
+                    - name: guard
+                      ms: 1.0
+                    - name: retrieve
+                      ms: 1.0
+                    - name: expand
+                      ms: 1.0
+                    - name: validate
+                      ms: 1.0
+                    trace_id: 0123456789abcdef0123456789abcdef
+                    calculations: {}
+                unavailable:
+                  value:
+                    status: unavailable
+                    answer: Доступ к источникам изменился. Повторите запрос.
+                    citations: []
+                    paths: []
+                    stages:
+                    - name: guard
+                      ms: 1.0
+                    - name: retrieve
+                      ms: 1.0
+                    - name: expand
+                      ms: 1.0
+                    - name: validate
+                      ms: 1.0
+                    - name: calculate
+                      ms: 1.0
+                    - name: generate
+                      ms: 1.0
+                    - name: output
+                      ms: 1.0
+                    trace_id: 0123456789abcdef0123456789abcdef
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+              example:
+                detail:
+                - type: string_too_short
+                  loc:
+                  - body
+                  - question
+                  msg: String should have at least 1 character
+                  input: ''
+                  ctx:
+                    min_length: 1
+        '401':
+          description: Нет действующего персонального токена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+              example:
+                detail: Требуется действующий персональный токен.
+        '429':
+          description: Лимит пользователя или заняты оба слота обработки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+              examples:
+                busy:
+                  value:
+                    detail: Обработка вопросов занята.
+                rate_limit:
+                  value:
+                    detail: Лимит запросов. Подождите минуту.
+        '503':
+          description: Сбой хранилища, модели, настройки или обработки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryFailed'
+              example:
+                detail:
+                  code: query_failed
+                  message: Проверьте доступность баз, модель и настройки API.
+                  trace_id: 0123456789abcdef0123456789abcdef
+      security:
+      - HTTPBearer: []
+components:
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+  schemas:
+    QueryInput:
+      properties:
+        question:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Question
+        mode:
+          type: string
+          pattern: ^(graph|vector)$
+          title: Mode
+          default: graph
+      additionalProperties: false
+      type: object
+      required:
+      - question
+      title: QueryInput
+      description: Вопрос пользователя и режим поиска источников для ответа.
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    Citation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        document_id:
+          type: string
+          format: uuid
+        filename: &id001
+          type: string
+        page:
+          type: integer
+          minimum: 1
+        text: *id001
+      required:
+      - id
+      - document_id
+      - filename
+      - page
+      - text
+    GraphPath:
+      type: object
+      properties:
+        id: *id001
+        seed: *id001
+        contract: *id001
+      required:
+      - id
+      - seed
+      - contract
+    Stage:
+      type: object
+      properties:
+        name:
+          type: string
+          enum:
+          - guard
+          - retrieve
+          - expand
+          - validate
+          - calculate
+          - generate
+          - output
+        ms:
+          type: number
+          minimum: 0
+      required:
+      - name
+      - ms
+    Calculations:
+      type: object
+      properties:
+        note: *id001
+        contract: *id001
+        totals:
+          type: object
+          properties:
+            act:
+              type: string
+              description: Decimal, сериализованный строкой
+            payment_order:
+              type: string
+              description: Decimal, сериализованный строкой
+        counts:
+          type: object
+          properties:
+            act:
+              type: integer
+              minimum: 0
+            payment_order:
+              type: integer
+              minimum: 0
+        scope: *id001
+      description: '{} без расчётов; note при неоднозначном договоре; иначе contract, totals, counts, scope.
+        Суммы только по доступным загруженным документам.'
+    QueryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - answered
+          - blocked
+          - insufficient_evidence
+          - unavailable
+        answer: *id001
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        paths:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphPath'
+        calculations:
+          $ref: '#/components/schemas/Calculations'
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stage'
+        trace_id: *id001
+      required:
+      - status
+      - answer
+      - citations
+      - paths
+      - stages
+      - trace_id
+      description: calculations отсутствует в ветке unavailable; в остальных ветках может быть {}. При статусах
+        отказа citations и paths пусты.
+    HTTPError:
+      type: object
+      properties:
+        detail: *id001
+      required:
+      - detail
+    QueryFailed:
+      type: object
+      properties:
+        detail:
+          type: object
+          properties:
+            code:
+              type: string
+              const: query_failed
+            message: *id001
+            trace_id: *id001
+          required:
+          - code
+          - message
+          - trace_id
+      required:
+      - detail
